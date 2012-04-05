@@ -1,0 +1,246 @@
+                                                                                                                                                                                                                                                    
+#include <msp430x14x.h>
+#include "myDefines.h"
+
+
+  PUBLIC _DriveLED
+
+  RSEG CODE
+
+
+
+_DriveLED:
+ ;prepare communication channel 
+   MOV  #0x9,R8           ;for later use with SUB
+   MOV.B #0xFF, &CPLDportDir         // P4.0, P4.1 to output.
+   MOV.B   #0x00, &CPLDport             ;set bits to 0
+
+;R15 contains the byte to be sent so we need to copy it to R4
+  MOV R15, R4
+  AND #0x000F, R4   //just the LS nibble
+  MOV R15, R5
+  AND #0x00F0, R5   //just the second LS nibble
+
+  RRA R5
+  RRA R5
+  RRA R5
+  RRA R5
+;from now on, R15 can be used however we wish
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Send:    
+
+    ;bit 0
+    MOV R4, R9            ;copy value to be sent
+    AND #0x0001, R9       ;select LSbit
+    MOV R9, R14           ;R14 = D+(0)
+    INV R14             
+    MOV R14, R15          ;R15 = not R15
+    INV R14               ;back to our original value
+    AND #0x0001,R15       ;select LSbit; now R15 = D-(0)
+    RLA R9                ;put D+ in position 1
+    CLRC
+    ADD R15,R9            ;put D- in position 0
+                          ;R9 = 0x00D+D-
+    ;we have the first bit to send in R9
+    ;and D+ in R14
+    ;and D- in R15
+    ;To compute the other 3 bits (or as many as needed) all we have to do is 
+    ;flip the bits and save them in registers R10 through R12
+    ;Note: this is not very scalable but it is very fast. To make it scalable
+    ;we could save the values in memory and do mem-mem MOV
+    ;It would be very easy to implement.
+
+    ;bit 1
+DoBIT1:
+    MOV   R4,R10          ;copy value to be sent
+    AND   #0x0002,R10     ;select second LSbit    
+    CMP   #0x0002,R10     ;R10-2 NOTE: our result will be 0 or -2 (negative)
+    JN    R10is0          ;toggle bits
+    ;implicit else: R10 = 1
+    MOV R9,R10            ;just copy the bits as they are from R[N-1]
+    JMP DoBIT2
+R10is0:
+    ;we need to toggle: invert the previous register and save it in the current one
+    INV R9             
+    MOV R9, R10          ;R10 = not R9
+    INV R9               ;back to our original value    
+    AND   #0x0003, R10    ;just the last 2 bits of R10
+    ;that's it. Now repeat for the other bits
+
+    ;bit 2
+DoBIT2:
+    MOV   R4,R11          ;copy value to be sent
+    AND   #0x0004,R11     ;select third LSbit    
+    CMP   #0x0004,R11     ;R11-4 NOTE: our result will be 0 or -2 (negative)
+    JN    R11is0          ;toggle bits
+    ;implicit else: R11 = 1
+    MOV R10,R11            ;just copy the bits as they are from R[N-1]
+    JMP   DoBIT3
+R11is0:
+    ;we need to toggle: invert the previous register and save it in the current one
+    INV R10             
+    MOV R10, R11          ;R11 = not R10
+    INV R10               ;back to our original value
+    AND   #0x0003, R11    ;just the last 2 bits of R10
+    ;that's it. Now repeat for the other bits
+
+    ;bit 3 - last bit 
+DoBIT3:
+    MOV   R4,R12          ;copy value to be sent
+    AND   #0x0008,R12     ;select fourth LSbit    
+    CMP   #0x0008,R12     ;R12-8 NOTE: our result will be 0 or -2 (negative)
+    JN    R12is0          ;toggle bits
+    ;implicit else: R11 = 1
+    MOV   R11,R12            ;just copy the bits as they are from R[N-1]
+    JMP   NextDigit
+R12is0:
+    ;we need to toggle: invert the previous register and save it in the current one
+    INV R11             
+    MOV R11, R12          ;R10 = not R9
+    INV R11               ;back to our original value
+    AND   #0x0003, R12    ;just the last 2 bits of R10
+  
+    ;we're done preparing bits
+    ;we now have them in R12 R11 R10 R9, just waiting to be sent
+NextDigit:
+    ;second digit
+//    PUSH   R4       ;save R4    ;not need to save anymore
+    MOV   R5,R4     ;processing code uses R4
+                    
+    PUSH  R12        ;save values to be sent R4 = lsb 
+    PUSH  R11
+    PUSH  R10
+    PUSH  R9
+
+    ;bit 0
+    MOV R4, R9            ;copy value to be sent
+    AND #0x0001, R9       ;select LSbit
+    MOV R9, R14           ;R14 = D+(0)
+    INV R14             
+    MOV R14, R15          ;R15 = not R15
+    INV R14               ;back to our original value
+    AND #0x0001,R15       ;select LSbit; now R15 = D-(0)
+    RLA R9                ;put D+ in position 1
+    CLRC
+    ADD R15,R9            ;put D- in position 0
+                          ;R9 = 0x00D+D-
+    ;we have the first bit to send in R9
+    ;and D+ in R14
+    ;and D- in R15
+
+    ;bit 1
+DoBIT12:
+    MOV   R4,R10          ;copy value to be sent
+    AND   #0x0002,R10     ;select second LSbit    
+    CMP   #0x0002,R10     ;R10-2 NOTE: our result will be 0 or -2 (negative)
+    JN    R10is02          ;toggle bits
+    ;implicit else: R10 = 1
+    MOV R9,R10            ;just copy the bits as they are from R[N-1]
+    JMP DoBIT22
+R10is02:
+    ;we need to toggle: invert the previous register and save it in the current one
+    INV R9             
+    MOV R9, R10          ;R10 = not R9
+    INV R9               ;back to our original value    
+    AND   #0x0003, R10    ;just the last 2 bits of R10
+    ;that's it. Now repeat for the other bits
+
+    ;bit 2
+DoBIT22:
+    MOV   R4,R11          ;copy value to be sent
+    AND   #0x0004,R11     ;select third LSbit    
+    CMP   #0x0004,R11     ;R11-4 NOTE: our result will be 0 or -2 (negative)
+    JN    R11is02         ;toggle bits
+    ;implicit else: R11 = 1
+    MOV R10,R11            ;just copy the bits as they are from R[N-1]
+    JMP   DoBIT32
+R11is02:
+    ;we need to toggle: invert the previous register and save it in the current one
+    INV R10             
+    MOV R10, R11          ;R11 = not R10
+    INV R10               ;back to our original value
+    AND   #0x0003, R11    ;just the last 2 bits of R10
+    ;that's it. Now repeat for the other bits
+
+    ;bit 3 - last bit 
+DoBIT32:
+    MOV   R4,R12          ;copy value to be sent
+    AND   #0x0008,R12     ;select fourth LSbit    
+    CMP   #0x0008,R12     ;R12-8 NOTE: our result will be 0 or -2 (negative)
+    JN    R12is02          ;toggle bits
+    ;implicit else: R11 = 1
+    MOV   R11,R12            ;just copy the bits as they are from R[N-1]
+    JMP   BitsReady
+R12is02:
+    ;we need to toggle: invert the previous register and save it in the current one
+    INV R11             
+    MOV R11, R12          ;R10 = not R9
+    INV R11               ;back to our original value
+    AND   #0x0003, R12    ;just the last 2 bits of R10
+    ;that's it. Now repeat for the other bits
+  
+    ;we're done preparing bits
+    ;we now have them in R12 R11 R10 R9, just waiting to be sent
+BitsReady:
+    ;Get the values back from the stack
+    ;but in the other registers, so now we have one digit in R4-R7
+    ;and the other in R9-R12
+    POP   R4
+    POP   R5
+    POP   R6
+    POP   R7
+    
+    
+    
+
+SendDigits:
+;sending LSB = R4
+    MOV.B   R4,&CPLDport       ;this takes 3 cycles. At the end, we have the lines set, so we need to wait    
+                              
+    MOV.B   R5,&CPLDport
+    
+    MOV.B   R6,&CPLDport
+    
+    MOV.B   R7,&CPLDport    
+    
+/*
+    ;toggle both bits to 1  
+    MOV.B   #0x03, &CPLDport
+*/    
+    ;now go to zero for a while
+    MOV.B   #0x3, &CPLDport
+     
+    MOV.B   #0x0, &CPLDport
+    CLRC
+    CLRC
+    CLRC
+    CLRC
+    CLRC
+    CLRC
+    CLRC
+    CLRC
+    CLRC   
+
+;send second digit
+    MOV.B   R9,&CPLDport       ;this takes 3 cycles. At the end, we have the lines set, so we need to wait    
+                                  
+    MOV.B   R10,&CPLDport
+    
+    MOV.B   R11,&CPLDport
+    
+    MOV.B   R12,&CPLDport    
+    
+    ;end of data       
+    MOV.B   #0x3, &CPLDport
+
+    MOV.B   #0x00,&CPLDport     ;bye-bye, going to sleep soon
+  
+//    POP R4  ;restore R4; we overwrote it with the value of R5, which stayed unchanged
+;not needed anymore
+    ret
+    END
+
+
+
+

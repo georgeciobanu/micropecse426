@@ -1,0 +1,65 @@
+
+SYMBOLS BY NAME
+
+     800            RAM_Size            
+     200            RAM_Start_Address   
+    11e4 CODE       _Delay              
+    11ee CODE       _KeyScan            
+    127e CODE       _SetForPress        
+    11c0 CODE       _SpeedUpClock       
+    11b4 CODE       _UART0_RX_interrupt 
+    125c CODE       _WaitForRelease     
+     200 IDATA0     ___begin_IDATA0     
+     208 UDATA0     ___begin_UDATA0     
+    12d0 CODE       ___debug_catch_me_here
+    12d8 CODE       ___do_debug_operation
+     20e UDATA0     ___end_UDATA0       
+     20c UDATA0     _dbgCntrlWord       
+     20a UDATA0     _dbgCommWord        
+    12f8 CODE       _debug_printf       
+     201 IDATA0     _edge               
+     202 IDATA0     _errorFlag          
+     203 IDATA0     _key                
+     204 IDATA0     _keyDown            
+    1100 CODE       _main               
+    1316 CODE       _memcpy             
+    1326 CODE       _memset             
+    119c CODE       _rowInterrupt       
+     208 UDATA0     _rx_flag            
+     205 IDATA0     _tasks              
+     209 UDATA0     _thr_char           
+     200 IDATA0     _time               
+    113e CODE       _timera_isr         
+
+
+SYMBOLS BY VALUE
+
+     200            RAM_Start_Address   
+     200 IDATA0     _time               
+     200 IDATA0     ___begin_IDATA0     
+     201 IDATA0     _edge               
+     202 IDATA0     _errorFlag          
+     203 IDATA0     _key                
+     204 IDATA0     _keyDown            
+     205 IDATA0     _tasks              
+     208 UDATA0     _rx_flag            
+     208 UDATA0     ___begin_UDATA0     
+     209 UDATA0     _thr_char           
+     20a UDATA0     _dbgCommWord        
+     20c UDATA0     _dbgCntrlWord       
+     20e UDATA0     ___end_UDATA0       
+     800            RAM_Size            
+    1100 CODE       _main               
+    113e CODE       _timera_isr         
+    119c CODE       _rowInterrupt       
+    11b4 CODE       _UART0_RX_interrupt 
+    11c0 CODE       _SpeedUpClock       
+    11e4 CODE       _Delay              
+    11ee CODE       _KeyScan            
+    125c CODE       _WaitForRelease     
+    127e CODE       _SetForPress        
+    12d0 CODE       ___debug_catch_me_here
+    12d8 CODE       ___do_debug_operation
+    12f8 CODE       _debug_printf       
+    1316 CODE       _memcpy             
+    1326 CODE       _memset             

@@ -1,0 +1,498 @@
+#include "myDefines.h"
+//TODO: enable nested interrupts
+//TODO: disable reading of other buttons after one is pressed
+//so that if more are pressed at the same time, only the first one is 
+//processed
+
+#include <msp430x14x.h>
+#include <stdlib.h>
+#include <UART_Commands.h>
+#include <string.h>
+
+#ifdef DEBUG
+#include <__cross_studio_io.h>
+#endif
+
+//given a 10 msec interval for the timer and an average of 4 cycles/instruction, we get
+//to execute 20 000 instruction in on clock tick
+//this should be enough
+
+
+#define UART0_INT_DRIVEN_RX
+
+#define IDLE_LPM3
+//#define IDLE_LPM0
+
+#define BOUNCE_DELAY 2 //20 milliseconds
+#define ROWCOUNT 4
+
+//unsigned char thr_char; /* hold char from UART RX*/
+//unsigned char rx_flag; /* receiver rx status flag */
+
+
+// ================================================ CPLD
+extern void DriveLED(char data);
+// ---------------------------------------------------
+
+
+// ================================================ UART
+void Delay(void);
+void InitUART(void);
+
+void txchar(char c);
+void txstring(char *s);
+void txline(char *s);
+// ----------------------------------------------------
+
+
+// ================================================ KEYPAD
+void KeyScan(void);
+void WaitForRelease(void);  
+void SetForPress(void);
+void OnButtonRelease(char key);
+
+char time = 0;
+char edge = 0, errorFlag = 0, key = 0, keyDown = 0; 
+
+// -------------------------------------------------------
+
+// =============================================== SCRATCH
+#ifdef DEBUG
+char t = 0;  
+long int val = 0;
+#endif
+
+void testScreen(void);
+
+char NeedSeedOfPower = 1;
+enum taskType  { button, serial};
+char tasks[3] = {0};
+
+char tempSend = 0xbb;
+#define TDMAX 100
+int tempDelay = TDMAX;
+// -------------------------------------------------------
+
+// ================================================ GAME
+void InitializeGame(void);
+
+void TXHighScores(void);
+void TXMenu(void);
+
+enum GameStates {gs_login, gs_play, gs_stop};
+int GameState = gs_login;
+
+struct UserRecord {
+  char usercode;
+  char games;
+  char highscore;
+};
+
+struct UserRecord *Users[];
+// -------------------------------------------------------
+
+void
+main(void)
+{
+  // Stop watchdog.
+  WDTCTL = WDTPW + WDTHOLD;
+
+  // Drive off ACLK(from 32 KHz clock).
+  TACTL = TASSEL0 + TACLR;
+
+  // Enable CCR0 interrupt.
+  CCTL0 = CCIE;
+
+  // Set timer value.
+  CCR0 = 328;   // approximately 10 ms; 32768/100
+
+  // P1 L to H (rising edge) interrupts
+  P1IES = 0x0;  //all set to interrupt on rising edge; use 1 for falling edge
+  P1IE = 0xE;   //Low 4 bits set to interrupt; not P1.0  
+
+  // P3 - 4 pins to output
+  P3DIR |= 0xF; // gotta use an OR because P3 is used for UART too
+  P3OUT |= 0xF;  //drive rows - OR because we want to leave upper pins unchanged
+
+  P1DIR &= ~0xE;   //P1[1..3] input
+
+  // Start Timer_A up to CCR0 mode
+  TACTL |= MC0;
+
+  //Switch CPU to XT2 = 8MHz
+  InitUART(); 
+  
+  // Enable interrupts.
+  _EINT();   
+
+  InitializeGame();
+
+  LPM1;
+}
+
+void TXMenu(void)
+{
+  txline("");
+  txline("");
+  txline("MicroP Memory Game - Group 1");
+  
+  txline("");
+  txline("");
+  txline("Available commands:");
+  txline("");
+  txline("\tn - New User");
+  txline("\th - Show High Scores");
+  txline("\t-------");
+  txline("\tc - Clear the screen");
+  txline("\t? - Help");
+  txline("\tt - Test");
+  txline("\tm - This menu screen");
+
+}
+
+void TXHighScores(void)
+{
+  txline("");
+  txline("");
+  txline("High Scores");
+  txline("");
+  txline("\tPlayer\t\tGames\t\tHiScore");
+  txline("\t------\t\t-----\t\t-------");
+  txline("");
+  txline("");
+}
+
+void testScreen(void)
+{
+  if (tempDelay > 0)
+  {
+    tempDelay--;
+  }
+  else
+  {
+    if(tempSend == 0xbb)
+    {
+      tempSend = 0xcc;
+    } else {
+      tempSend = 0xbb;
+    }
+    DriveLED(tempSend);
+    tempDelay = TDMAX;
+  }
+}
+
+void InitializeGame(void)
+{
+  // load high scores from flash
+  // print terminal menu
+  
+  TXMenu();
+  txline("");
+  txstring("What do I do?>");
+  // initialize GameState
+  
+
+  return;
+}
+
+void InitUART(void)
+{  
+
+  unsigned int i;
+
+  BCSCTL1 &= ~XT2OFF;
+  BCSCTL2 |= SELS;                       // SMCLK = XT2
+  do 
+  {
+  IFG1 &= ~OFIFG;                       // Clear OSCFault flag
+  for (i = 0xFF; i > 0; i--);           // Time for flag to set
+  }
+  while ((IFG1 & OFIFG) != 0);          // OSCFault flag still set?                
+
+  BCSCTL2 |= SELM_2;                      // MCLK = XT2 (safe)
+
+
+  UCTL0 = CHAR;                         // 8-bit character
+  UTCTL0 = SSEL1;                       // UCLK = MCLK
+  UBR00 = 0xA0;                        // 8Mhz 19200 - !!! 1b4 !!! (1A0)
+  UBR10 = 0x01;                         // 
+  UMCTL0 = 0x00;                        // no modulation
+  ME1 |= UTXE0 + URXE0;                 // Enable USART0 TXD/RXD
+  IE1 |= URXIE0;                        // Enable USART0 RX interrupt
+  P3SEL |= 0x30;                        // P3.4,5 = USART0 TXD/RXD
+  P3DIR |= 0x10;                        // P3.4 output direction
+
+}
+
+void 
+UART0_RX_interrupt(void) __interrupt[UART0RX_VECTOR]
+{
+  
+  //while ((IFG1 & UTXIFG0) == 0);        // USART0 TX buffer ready?
+  //while ((IFG1 & URXIFG0) == 0);        // USART0 RX buffer ready?
+  
+  switch(RXBUF0)
+  {
+      case cmd_ClearScreen: txstring(ClearScreen); break;
+      case cmd_Help: break;
+      case cmd_Test:txline(""); 
+                    txline("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+"); 
+                    break;
+      case cmd_NewUser: break;
+      case cmd_HighScores: TXHighScores(); break;
+      case cmd_Menu: TXMenu(); break;
+      default:
+        txline("");
+        txline("Unrecognized command");
+      break;
+  }
+
+  txline("");
+  txstring("What do I do?>");
+  
+}
+
+void txchar(char c)
+{  
+  while ((IFG1 & UTXIFG0) == 0);
+  TXBUF0 = c;
+}
+
+void txline(char *s)
+{
+  txstring(s);
+  txstring(NewLine);
+}
+
+void txstring(char *s)
+{
+  while (*s)
+  {
+    while ((IFG1 & UTXIFG0) == 0);
+    TXBUF0 = *s++;
+  }
+}
+
+// Procedure fires whenever there is a rising key event
+// Theoretically, this event should be the only one
+// that can change the state of the game's FSM
+void OnButtonRelease(char akey)
+{
+    switch (akey)
+    {
+      case K1:
+              DriveLED(0x01);
+      break;
+      case K2:
+              DriveLED(0x02);
+      break;
+      case K3:
+              DriveLED(0x03);
+      break;
+
+      case K4:
+              DriveLED(0x04);
+      break;
+      case K5:
+              DriveLED(0x05);
+      break;
+      case K6:
+              DriveLED(0x06);
+      break;
+
+      case K7:
+              DriveLED(0x07);
+      break;
+      case K8:
+              DriveLED(0x08);
+      break;
+      case K9:
+              DriveLED(0x09);
+      break;
+
+      case KStar:
+              DriveLED(0xAA);
+      break;
+      case K0:
+              DriveLED(0x00);
+      break;
+      case KPound:
+              DriveLED(0xBB);
+      break;
+
+    }
+}
+
+
+////////////////////////////////////////////////////////////////////////
+// Timer A0 interrupt service routine. This is where most of the processing happens
+void timera_isr(void) __interrupt[TIMERA0_VECTOR]
+{
+testScreen();
+//OPTIMIZATION: disable this interrupt most of the time: it should only be enabled at the end
+//of the serial/keypad interrupt
+//most of the time = if tasks[button] == 0 && tasks[keypad] == 0
+//do not optimize for this as the variables mey be re-enabled by an interrupt
+
+  if (tasks[button] == 1){
+    //the actual key value is scanned in the interrupt routine    
+    if (time == 0){     //debounce done
+      KeyScan();
+      if (edge == 1)
+      {    //falling edge
+        if (keyDown == 1){   //a key is down, which means it was NOT a real falling edge event
+          time = BOUNCE_DELAY;
+          return;
+        }         
+//#ifdef DEBUG        
+//        debug_printf("Button was released. Key: %x \n", key);
+//#endif    
+       
+       //send data to cpld, depending on game logic
+        OnButtonRelease(key);
+
+
+        SetForPress();
+      } else { //rising edge      
+        if (keyDown == 0){   //no key is down, which means it was noise
+          tasks[button] = 0;  //nothing to do, it was just a glitch            
+        }                                
+        WaitForRelease();
+//#ifdef DEBUG       
+//          debug_printf("Button is Down\n");
+//#endif
+      }      
+    } else{
+      //decrease the waiting time
+      time --;
+    }
+  }  
+}
+
+//process button press
+//ONLY if done clear the flag for it
+//tasks[button] == 0;
+/*
+  if (tasks[serial] == 1){
+  //maybe disable the timer here??
+  //this might mean that we won't be able to process key presses
+  
+  //only send a limited number of characters per session: a page 
+  //as Eugene likes to call it
+  //so that we don't generate an interrupt loop
+  //i.e. interrupting itself just to continue
+  //but using a lot of stack space each time
+  
+  //disable serial interrupts
+  //process serial data:
+  //send (continue if not done) table to serial port
+  //enable serial interrupts ONLY if done sending
+  
+    
+  }*/
+
+
+void rowInterrupt(void) __interrupt[PORT1_VECTOR]
+{
+ //clear interrupt flag
+  //P1IFG &= ~0xE;
+  P1IFG = 0;
+ //disable further interrupts on P1 - will be reenabled after scanning the row 
+ // P1IE &= ~0xE;
+ P1IE = 0x0;
+
+  tasks[button] = 1;
+  time = BOUNCE_DELAY;
+
+  if (NeedSeedOfPower == 1){  
+    val = TAR;
+    srand(val);  //the value of TAR depends on the time the user presses the button
+    NeedSeedOfPower = 0;   //we only need to do this once
+    //now it it safe to call rand whenever needed, by first checking that NeedSeedOfPower = 0
+  }
+
+//go to sleep until next interrupt - might be a bad choice 
+//when sending data over the serial port, as it will waste cycles?
+}
+
+
+
+
+
+
+void Delay(void)
+{
+  volatile unsigned int delay_count;
+  for(delay_count=0xffff;delay_count!=0;delay_count--);
+}
+
+void KeyScan(void){
+   int i = 0, mask = 1;
+   char val = 0; 
+//clear bits in P1
+  //P1OUT &= ~0xE;   
+  P1OUT = 0;
+
+  errorFlag = 0;
+  keyDown = 0;
+  for (i = 0; i < ROWCOUNT; i++) 
+  {  
+    P3OUT = 0;      //stop driving rows
+    P1DIR = 0xFF;   //Set column pins to output and low
+    P1OUT = 0;      //to bleed off charge and avoid erroneus reads
+    
+    P1DIR = 0x01;     //set P1 pins to input - ignore P1.0 as it is screwed
+    
+    P3OUT = mask;     //put value on first row
+  
+    if (P1IN != 0){   //any key on this row pressed?
+      keyDown = 1;
+      if (edge == 0){    //only save the value if we are on rising edge
+        key = mask;     //row information
+        key = key << 4;
+        val = P1IN & 0x0E;
+        key = key + val;    //just the LS bits of P1IN
+        //TODO: should break here?
+      }
+      tasks[button] = 1;   //schedule processing because a button was indeed pressed
+      time = BOUNCE_DELAY;    //reset the keypad debounce counter; same for rising and falling edge
+    }
+
+    mask = mask << 1;   //next row     
+  }   //we scanned the keypad
+  
+  P3OUT |= 0x0F;    //drive rows again
+  P1IFG = 0;      //reset interrupt flags
+ /* if (( key & 0x0F) == 0){ //if no key was detected
+     errorFlag = 1;   //could use a code
+  }*/
+//TODO: check if two(or more) buttons are pressed and do something about that
+//maybe we should use a state machine?
+}
+
+void WaitForRelease(void){
+  // P3 - 4 pins to output
+  P3DIR |= 0xF;   
+  P3OUT |= 0xF;  //drive rows
+
+  // P1 L to H (falling edge) interrupts
+  P1IES = 0xE;  //all set to interrupt on falling edge
+  P1IFG = 0;
+  P1IE = 0xE;   //Low 4 bits set to interrupt; not using P1.0     
+
+  edge = 1; //setup for falling edge          
+}
+
+void SetForPress(void){
+  // P3 - 4 pins to output
+  P3DIR |= 0xF;
+  P3OUT |= 0xF;  //drive rows
+  P1IFG = 0;
+
+   // P1 L to H (rising edge) interrupts
+  P1IES = 0;  //all set to interrupt on rising edge
+  P1IE = 0xE;   //Low 4 bits set to interrupt; not using P1.0              
+
+  edge = 0;   //setup for raising
+  tasks[button] = 0;  //nothing else to do for buttons
+}

@@ -1,0 +1,6 @@
+// some ascii codes i need
+
+#define CarriageReturn 0xD
+#define NewLine "\033E"
+#define Space 0x20
+#define FormFeed "\033[2J\033[H"

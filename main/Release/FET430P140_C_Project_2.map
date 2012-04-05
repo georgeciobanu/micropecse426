@@ -1,0 +1,75 @@
+
+SYMBOLS BY NAME
+
+     800            RAM_Size            
+     200            RAM_Start_Address   
+    12c0 CODE       _Delay              
+    1172 CODE       _KeyScan            
+     209 IDATA0     _NeedSeedOfPower    
+    12e4 CODE       _SendByte           
+    115c CODE       _SetForPress        
+    13cc CODE       _SpeedUpClock       
+    12be CODE       _UART0_RX_interrupt 
+    12ca CODE       _WaitForRelease     
+     200 IDATA0     ___begin_IDATA0     
+     214 UDATA0     ___begin_UDATA0     
+    13c4 CODE       ___debug_catch_me_here
+    13f0 CODE       ___do_debug_operation
+     218 UDATA0     ___end_UDATA0       
+     210 IDATA0     ___rand_next        
+     216 UDATA0     _dbgCntrlWord       
+     214 UDATA0     _dbgCommWord        
+    1114 CODE       _debug_printf       
+     205 IDATA0     _edge               
+     206 IDATA0     _errorFlag          
+     207 IDATA0     _key                
+     208 IDATA0     _keyDown            
+    1410 CODE       _main               
+    1132 CODE       _memcpy             
+    1142 CODE       _memset             
+    125a CODE       _rowInterrupt       
+    1152 CODE       _srand              
+     20a IDATA0     _tasks              
+     20e IDATA0     _tempDelay          
+     20d IDATA0     _tempSend           
+     204 IDATA0     _time               
+    1100 CODE       _timera_isr         
+     200 IDATA0     _val                
+
+
+SYMBOLS BY VALUE
+
+     200            RAM_Start_Address   
+     200 IDATA0     _val                
+     200 IDATA0     ___begin_IDATA0     
+     204 IDATA0     _time               
+     205 IDATA0     _edge               
+     206 IDATA0     _errorFlag          
+     207 IDATA0     _key                
+     208 IDATA0     _keyDown            
+     209 IDATA0     _NeedSeedOfPower    
+     20a IDATA0     _tasks              
+     20d IDATA0     _tempSend           
+     20e IDATA0     _tempDelay          
+     210 IDATA0     ___rand_next        
+     214 UDATA0     _dbgCommWord        
+     214 UDATA0     ___begin_UDATA0     
+     216 UDATA0     _dbgCntrlWord       
+     218 UDATA0     ___end_UDATA0       
+     800            RAM_Size            
+    1100 CODE       _timera_isr         
+    1114 CODE       _debug_printf       
+    1132 CODE       _memcpy             
+    1142 CODE       _memset             
+    1152 CODE       _srand              
+    115c CODE       _SetForPress        
+    1172 CODE       _KeyScan            
+    125a CODE       _rowInterrupt       
+    12be CODE       _UART0_RX_interrupt 
+    12c0 CODE       _Delay              
+    12ca CODE       _WaitForRelease     
+    12e4 CODE       _SendByte           
+    13c4 CODE       ___debug_catch_me_here
+    13cc CODE       _SpeedUpClock       
+    13f0 CODE       ___do_debug_operation
+    1410 CODE       _main               

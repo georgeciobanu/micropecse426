@@ -1,0 +1,8 @@
+#define cmd_ClearScreen "clc"
+#define cmd_Help "help"
+#define cmd_Test "test"
+
+#define CarriageReturn 0xD
+#define NewLine "\033E"
+#define Space 0x20
+#define FormFeed "\033[2J\033[H"

@@ -1,0 +1,35 @@
+<!DOCTYPE CrossStudio_Project_File>
+<solution version="1" Name="FET430P140_C_Project_2" >
+  <project Name="FET430P140_C_Project_2" >
+    <configuration Target="MSP430F149" linker_memory_map_file="$(StudioDir)/targets/MSP430F149.xml" project_directory="" project_type="Executable" Name="Common" build_use_hardware_multiplier="Yes" />
+    <folder Name="Source Files" >
+      <configuration filter="c;h;s;asm;inc;s43" Name="Common" />
+      <file file_name="main.c" Name="main.c" />
+      <file file_name="sendData.asm" Name="sendData.asm" />
+      <file file_name="myDefines.h" Name="myDefines.h" />
+    </folder>
+    <folder Name="System Files" >
+      <configuration filter="xml" Name="Common" />
+      <file file_name="$(StudioDir)/src/crt0.asm" Name="crt0.asm" />
+      <file file_name="$(StudioDir)/targets/section_placement.xml" Name="section_placement.xml" >
+        <configuration Name="Common" file_type="Section Placement" />
+      </file>
+    </folder>
+  </project>
+  <configuration build_debug_information="Yes" Name="Debug" />
+  <configuration optimize_jump_chaining="Yes" optimize_block_locality="Yes" optimize_tail_merging="Yes" c_preprocessor_definitions="NDEBUG" optimize_cross_calling="Standard" build_debug_information="No" optimize_jump_threading="Yes" Name="Release" optimize_dead_code="Yes" optimize_cross_jumping="Yes" optimize_copy_propagation="Yes" />
+  <project Name="Scratch" >
+    <configuration Target="MSP430F149" linker_memory_map_file="$(StudioDir)/targets/MSP430F149.xml" project_directory="../ScratchProject" project_type="Executable" Name="Common" build_use_hardware_multiplier="Yes" />
+    <folder Name="Source Files" >
+      <configuration filter="c;h;s;asm;inc;s43" Name="Common" />
+      <file file_name="main.c" Name="main.c" />
+    </folder>
+    <folder Name="System Files" >
+      <configuration filter="xml" Name="Common" />
+      <file file_name="$(StudioDir)/src/crt0.asm" Name="crt0.asm" />
+      <file file_name="$(StudioDir)/targets/section_placement.xml" Name="section_placement.xml" >
+        <configuration Name="Common" file_type="Section Placement" />
+      </file>
+    </folder>
+  </project>
+</solution>

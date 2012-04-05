@@ -1,0 +1,70 @@
+<!DOCTYPE CrossStudio_for_MSP430_Session_File>
+<session>
+ <Breakpoints/>
+ <ExecutionCountWindow/>
+ <Memory1>
+  <MemoryWindow autoEvaluate="0" addressText="&amp;cmdbuf" numColumns="8" sizeText="sizeof(cmdbuf)" dataSize="1" radix="2" addressSpace="" />
+ </Memory1>
+ <Memory2>
+  <MemoryWindow autoEvaluate="0" addressText="0x0020" numColumns="8" sizeText="1" dataSize="1" radix="2" addressSpace="" />
+ </Memory2>
+ <Memory3>
+  <MemoryWindow autoEvaluate="0" addressText="0x0024" numColumns="8" sizeText="1" dataSize="1" radix="2" addressSpace="" />
+ </Memory3>
+ <Memory4>
+  <MemoryWindow autoEvaluate="0" addressText="" numColumns="8" sizeText="" dataSize="1" radix="16" addressSpace="" />
+ </Memory4>
+ <Project>
+  <ProjectSessionItem path="FET430P140_C_Project_2" name="unnamed" />
+  <ProjectSessionItem path="FET430P140_C_Project_2;FET430P140_C_Project_2" name="unnamed" />
+  <ProjectSessionItem path="FET430P140_C_Project_2;FET430P140_C_Project_2;Source Files" name="unnamed" />
+  <ProjectSessionItem path="FET430P140_C_Project_2;FET430P140_C_Project_2;System Files" name="unnamed" />
+  <ProjectSessionItem path="FET430P140_C_Project_2;Scratch" name="unnamed" />
+  <ProjectSessionItem path="FET430P140_C_Project_2;Scratch;Source Files" name="unnamed" />
+  <ProjectSessionItem path="FET430P140_C_Project_2;Scratch;System Files" name="unnamed" />
+ </Project>
+ <Register1>
+  <RegisterWindow unsignedDisplays="" asciiDisplays="" octalDisplays="" visibleGroups="CPU Registers" decimalDisplays="" binaryDisplays="" />
+ </Register1>
+ <Register2>
+  <RegisterWindow unsignedDisplays="" asciiDisplays="" octalDisplays="" visibleGroups="" decimalDisplays="" binaryDisplays="" />
+ </Register2>
+ <Register3>
+  <RegisterWindow unsignedDisplays="" asciiDisplays="" octalDisplays="" visibleGroups="CPU Registers" decimalDisplays="" binaryDisplays="" />
+ </Register3>
+ <Register4>
+  <RegisterWindow unsignedDisplays="" asciiDisplays="" octalDisplays="" visibleGroups="CPU Registers" decimalDisplays="" binaryDisplays="" />
+ </Register4>
+ <SourceNavigatorWindow/>
+ <TraceWindow>
+  <Trace wrap="Yes" type="1" enabled="Yes" />
+ </TraceWindow>
+ <Watch1>
+  <Watches active="1" >
+   <Watchpoint evalMode="1" linenumber="258" evalType="1" radix="16" name="cmdbuf" expression="cmdbuf" filename="\\025EMF.campus.mcgill.ca\EMFhome\ECE\esavch\Desktop\microp\lab3\main\main.c" />
+   <Watchpoint linenumber="255" radix="2" name="rx != CarriageReturn" expression="rx != CarriageReturn" filename="\\025EMF.campus.mcgill.ca\EMFhome\ECE\esavch\Desktop\microp\lab3\main\main.c" />
+   <Watchpoint linenumber="258" radix="11" name="cmdcursor" expression="cmdcursor" filename="\\025EMF.campus.mcgill.ca\EMFhome\ECE\esavch\Desktop\microp\lab3\main\main.c" />
+   <Watchpoint linenumber="0" radix="11" name="key" expression="key" filename="" />
+   <Watchpoint linenumber="255" radix="1" name="rx" expression="rx" filename="\\025EMF.campus.mcgill.ca\EMFhome\ECE\esavch\Desktop\microp\lab3\main\main.c" />
+   <Watchpoint evalMode="0" linenumber="289" evalType="0" radix="16" name="cmdbuf2" expression="cmdbuf2" filename="\\025EMF.campus.mcgill.ca\EMFhome\ECE\esavch\Desktop\microp\lab3\main\main.c" />
+   <Watchpoint linenumber="333" radix="11" name="strlen(s)" expression="strlen(s)" filename="\\025EMF.campus.mcgill.ca\EMFhome\ECE\esavch\Desktop\microp\lab3\main\main.c" />
+  </Watches>
+ </Watch1>
+ <Watch2>
+  <Watches active="0" />
+ </Watch2>
+ <Watch3>
+  <Watches active="0" />
+ </Watch3>
+ <Watch4>
+  <Watches active="0" />
+ </Watch4>
+ <Files>
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" x="16" debugPath="C:\Program Files\Rowley Associates Limited\CrossWorks MSP430 1.3\include\msp430x14x.h" y="129" useHTMLEdit="0" path="C:\Program Files\Rowley Associates Limited\CrossWorks MSP430 1.3\include\msp430x14x.h" left="0" selected="0" name="unnamed" top="125" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" x="0" debugPath="c:\program files\rowley associates limited\crossworks msp430 1.3\src\crt0.asm" y="22" useHTMLEdit="0" path="c:\program files\rowley associates limited\crossworks msp430 1.3\src\crt0.asm" left="0" selected="0" name="unnamed" top="0" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" x="1" debugPath="\\025EMF.campus.mcgill.ca\EMFhome\ECE\esavch\Desktop\microp\lab3\main\main.c" y="97" useHTMLEdit="0" path="\\025EMF.campus.mcgill.ca\EMFhome\ECE\esavch\Desktop\microp\lab3\main\main.c" left="0" selected="0" name="unnamed" top="84" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" x="9" debugPath="\\025EMF.campus.mcgill.ca\EMFhome\ECE\esavch\Desktop\microp\lab3\main\sendData.asm" y="11" useHTMLEdit="0" path="\\025EMF.campus.mcgill.ca\EMFhome\ECE\esavch\Desktop\microp\lab3\main\sendData.asm" left="0" selected="0" name="unnamed" top="0" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" x="19" debugPath="\\025EMF.campus.mcgill.ca\EMFhome\ECE\esavch\Desktop\microp\lab3\main\myDefines.h" y="29" useHTMLEdit="0" path="\\025EMF.campus.mcgill.ca\EMFhome\ECE\esavch\Desktop\microp\lab3\main\myDefines.h" left="0" selected="0" name="unnamed" top="23" />
+ </Files>
+ <MSP430CrossStudioWindow activeProject="FET430P140_C_Project_2" ignoreExceptions="" autoConnectTarget="/FET on LPT1" debugSearchFileMap="" fileDialogInitialDirectory="" fileDialogDefaultFilter="*.c;*.h" debugSearchPath="" buildConfiguration="Debug" />
+</session>
