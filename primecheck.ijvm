@@ -1,0 +1,348 @@
+                                                                     
+                                                                     
+                                                                     
+                                             
+                                                                     
+                                                                     
+                                                                     
+                                             
+.constant
+K_pound  0x23
+NumBoards 0x23
+BoardID 0x42
+Slave 0x53
+Master 0x4D
+Multiply 0x58
+Divide 0x44
+Mod 0x25
+Sqrt 0x51
+Keypad 0x4B
+Thousand 1000
+TenThousand 10000
+
+.end-constant
+
+.main
+.var
+
+index
+inputrange
+boardID
+numBoards
+d1
+d2
+d3
+d4
+d5
+currentkey
+step
+
+.end-var
+      	BIPUSH 0
+	DUP
+	DUP
+	DUP
+	DUP
+	ISTORE index
+	ISTORE inputrange
+	ISTORE boardID
+	ISTORE numBoards
+	ISTORE currentkey 
+	
+	BIPUSH 0x30
+	DUP
+	DUP
+	DUP
+	DUP
+	ISTORE d1
+	ISTORE d2
+	ISTORE d3
+	ISTORE d4
+	ISTORE d5
+
+	LDC_W NumBoards
+	IN			//get num boards from IJVM
+	ISTORE numBoards	
+	LDC_W BoardID	
+	IN			//get board ID from IJVM
+	ISTORE boardID
+
+	//are we master or slave?
+	ILOAD 	boardID
+	IFEQ newkey	// 0 is the master, read keypad
+
+
+	// reading from master
+
+	INVOKEVIRTUAL GetRange
+
+	ISTORE inputrange
+	GOTO mstr_send	
+
+
+	// compose the range from the d's
+	// each must be offset by -0x30
+	// d5 is Most significant
+	// d1 is least significant
+	
+
+newkey:	INVOKEVIRTUAL getKey	//call a blocking method, when it returns a new key is on the stack
+	
+	// if key is pound, branch
+	ISTORE currentkey
+
+	ILOAD currentkey
+	LDC_W K_pound
+	ISUB
+	IFEQ keypad_accept
+	
+	// discard digit 5, load 
+	// everything from low to high
+	ILOAD d4
+	ISTORE d5
+
+	ILOAD d3
+	ISTORE d4
+	
+	ILOAD d2
+	ISTORE d3
+
+	ILOAD d1
+	ISTORE d2
+
+	ILOAD currentkey
+	ISTORE d1
+
+	
+	GOTO newkey
+
+	
+keypad_accept: ILOAD d1
+	BIPUSH 0x30
+	ISUB
+	ISTORE inputrange
+
+	// d2*10
+	ILOAD d2
+	BIPUSH 0x30
+	ISUB
+	BIPUSH 10
+	LDC_W Multiply
+	OUT
+	
+	// inputrange += d2*10
+	ILOAD inputrange
+	IADD
+	ISTORE inputrange
+	
+	// d3*100
+	ILOAD d3
+	BIPUSH 0x30
+	ISUB
+	BIPUSH 100
+	
+	LDC_W Multiply
+	OUT
+	
+	// inputrange += d3*100
+	ILOAD inputrange
+	IADD
+	ISTORE inputrange
+	
+	// d4*1000
+	
+	ILOAD d4
+	BIPUSH 0x30
+	ISUB
+	LDC_W Thousand
+	LDC_W Multiply
+	OUT
+	
+	// inputrange += d4*1000
+	ILOAD inputrange
+	IADD
+	ISTORE inputrange
+	
+	// d5*10000
+	ILOAD d5
+	BIPUSH 0x30
+	ISUB
+	LDC_W TenThousand
+	LDC_W Multiply
+	OUT
+	
+	// inputrange += d5*1000
+	ILOAD inputrange
+	IADD
+	ISTORE inputrange	
+	
+//master has inputrange -> send to slave
+mstr_send: 	ILOAD inputrange
+		LDC_w  Slave
+		OUT
+	   
+
+
+//initialize index = BoardID*2 + 1
+	ILOAD boardID
+	ILOAD boardID
+	IADD 		//BoardID*2
+	BIPUSH	1	
+	IADD		//BoardID*2 + 1
+	ISTORE index
+
+//initialize step with 2*numBoards
+	ILOAD numBoards		//step = 2*numBoards
+	ILOAD numBoards
+	IADD
+	ISTORE step
+
+again:	ILOAD index
+
+	DUP
+	ILOAD inputrange
+	SWAP
+	ISUB
+	IFLT done
+
+	INVOKEVIRTUAL isPrime
+
+	IFEQ nope
+	
+	ILOAD index
+	BIPUSH 0x4D		//out std master
+	OUT
+	
+nope:	LDC_W Slave
+	IN	
+	DUP
+
+	//DUP
+	//BIPUSH 0x4D		//out std master
+	//OUT
+
+	IFEQ sbusy	
+	DUP
+	BIPUSH 0x4D		//out std master
+	OUT
+	
+sbusy: POP
+	ILOAD step
+	ILOAD index
+	IADD			//index += step
+	ISTORE index
+
+	GOTO again
+done:	HALT
+.end-main
+
+
+.method GetRange()
+.var
+.end-var
+	BIPUSH 0		//push dummy
+read: 	POP
+	LDC_W Master
+	IN			//read master serial port
+	DUP
+	IFEQ read
+	IRETURN
+
+.end-method
+
+
+.method print(num)
+.var
+.end-var
+	ILOAD num
+	BIPUSH 0x4D		//out std master
+	OUT
+	IRETURN			// return
+.end-method
+
+.method getKey()
+.var
+.end-var
+	BIPUSH 0		//push dummy
+keypad: POP
+	LDC_W Keypad
+	IN			//read keypad (non-blocking) returns 0 when no key is pressed
+	DUP
+	IFEQ keypad
+	IRETURN
+.end-method
+
+.method isPrime(x)
+.var
+top
+p
+tmp
+.end-var
+
+	ILOAD x
+	IFEQ not_prime		//0 not prime
+	ILOAD x
+	BIPUSH 1
+	IF_ICMPEQ not_prime	//1 not prime
+	ILOAD x
+	BIPUSH 2
+	IF_ICMPEQ is_prime	//2 is prime
+	ILOAD x
+	BIPUSH 3
+	IF_ICMPEQ is_prime	//3 is prime
+
+	ILOAD x
+	BIPUSH 2
+	LDC_W Mod
+	OUT			//mod
+	IFEQ not_prime		//multiple of 2 => not prime
+
+	ILOAD x
+	BIPUSH 3
+	LDC_W Mod
+	OUT			//mod
+	IFEQ not_prime		//multiple of 3 => not prime
+	
+	ILOAD x
+	LDC_W Sqrt
+	OUT			//sqrt
+	ISTORE top		//get the max number to check : sqrt(x)
+
+
+	BIPUSH 5		//start with p=5
+	ISTORE p
+next:	ILOAD top
+	ILOAD p
+	ISUB
+	IFLT is_prime		//checked all numbers 6k+1 & 6k-i < sqrt(x) => x is prime
+	
+	ILOAD x
+	ILOAD p
+	LDC_W Mod
+	OUT			//mod
+	IFEQ not_prime		//divisible by 6k-1 => not prime
+
+	ILOAD x
+	BIPUSH 2
+	ILOAD p			
+	IADD			//p+=2 (i.e. p = (6k-1) + 2 = 6p + 1)
+	DUP
+	ISTORE p
+	LDC_W Mod
+	OUT			//mod
+	IFEQ not_prime		//divisible by 6k+1 => not prime
+	
+	BIPUSH 4	
+	ILOAD p
+	IADD			//p+=4 (i.e. next p=6k'-1)
+	ISTORE p
+	
+	GOTO next		
+	
+not_prime: BIPUSH 0
+	IRETURN
+is_prime: BIPUSH 1
+	IRETURN
+	
+.end-method
+~
